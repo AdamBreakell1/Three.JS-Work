@@ -1,0 +1,172 @@
+<html>
+    <head>
+        <title>Three.js Crash Course</title>
+
+        <style>
+            body {margin:0;}
+            canvas {width:100%; height: 100%;}
+        </style>
+    </head>
+
+    <body>
+        <script src="../js/three.js"></script>
+        <script src="../js/OrbitControls.js"></script>
+        <script src="../js/input.js"></script>
+        <script src="../js/ObjectLoader.js"></script>
+
+        <script>
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera(75,window.innerWidth / window.innerHeight, 0.1,1000);
+            /*LOADS THE BACKGROUND
+            const loader = new THREE.TextureLoader();
+            const bgTexture = loader.load('../assets/background2.jpg');
+            scene.background = bgTexture;*/
+
+            //scene.background = new THREE.Color( 0x2b7dc4 ); // CHANGES BACKGROUND TO A SOLID COLOR
+
+            var input = new Input();
+
+
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            window.addEventListener('resize',function()
+            {
+                var width = window.innerWidth;
+                var height = window.innerHeight;
+                renderer.setSize(width,height);
+                camera.aspect = width/height;
+                camera.updateProjectionMatrix();
+            } );
+            //ORBIT CONTROLS ALLOW FOR ON-SCREEN TRAVERSAL THROUGH MOUSE MOVEMENT AND CLICK/DRAG MOTIONS
+            controls = new THREE.OrbitControls(camera,renderer.domElement);
+
+            var loader = new THREE.ObjectLoader();
+            loader.load
+            (
+                '../models/head.json',
+
+                function(object)
+                {
+                    scene.add(object);
+                }
+            );
+
+            //CREATE THE SHAPES
+            var geometry = new THREE.BoxGeometry(1,1,1);
+            //CREATING AN ARRAY OF MATERIALS FOR EACH FACE OF THE CUBE 
+            var cubeMaterials = 
+            [
+                //PHONG == MOST REFLECTIVE MATERIAL
+                //BASIC == NON REFLECTIVE - ONLY SHADOWING
+                //LAMBERT == SIMILAR TO PHONG - SLIGHTLY LESS REFLECTIVE 
+                new THREE.MeshPhongMaterial({/*color:0xFFFFFF,REMOVE MAP --> SIDE FOR JUST COLOR SIDES*/map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //RIGHT SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //LEFT SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //TOP SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //BOTTOM SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //FRONT SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/asset3.png"),side:THREE.DoubleSide}), //BACK SIDE
+            ];
+            var playingGrid = new THREE.BoxGeometry(20,0.2,20);
+            //CREATING ARRAY FOR EACH FACE OF THE PLAYING PLATFORM 
+            var platformMaterials =
+            [
+                //PHONG == MOST REFLECTIVE MATERIAL
+                //BASIC == NON REFLECTIVE - ONLY SHADOWING
+                //LAMBERT == SIMILAR TO PHONG - SLIGHTLY LESS REFLECTIVE 
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/goldSides.jpg"),side:THREE.DoubleSide}), //RIGHT SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/goldSides.jpg"),side:THREE.DoubleSide}), //LEFT SIDE
+                new THREE.MeshPhongMaterial({color:0x101010,side:THREE.DoubleSide}), //TOP SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/goldSides.jpg"),side:THREE.DoubleSide}), //BOTTOM SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/goldSides.jpg"),side:THREE.DoubleSide}), //FRONT SIDE
+                new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../assets/goldSides.jpg"),side:THREE.DoubleSide}), //BACK SIDE
+            ]
+
+            //CREATE MATERIAL, COLOUR OR IMAGE TEXTURE
+            //CUBE
+            var material = new THREE.MeshFaceMaterial( cubeMaterials );
+            var cube = new THREE.Mesh(geometry,material);
+            scene.add(cube);
+            //PLAYING BATTLE PLATFORM
+            var materialGrid = new THREE.MeshFaceMaterial(platformMaterials);
+            var playGrid = new THREE.Mesh(playingGrid,materialGrid);
+            scene.add(playGrid);
+
+            //SETS THE PRIMARY POSITION OF THE CAMERA (DEFAULT POSITION)
+            camera.position.z=20;
+            camera.position.y=3.5;
+
+            //EMITS LIGHT EVERYWHERE IN ALL DIRECTIONS
+            var ambientLight = new THREE.AmbientLight(0xFFFFFF,2);
+            scene.add(ambientLight);
+
+            //LIGHTS FROM A SPECIFIC POINT
+            var light1 = new THREE.PointLight(0xFF0040,4,50);
+            //scene.add(light1);
+
+            var light2 = new THREE.PointLight(0x0040FF,2,50);
+            //scene.add(light2);
+
+            var light3 = new THREE.PointLight(0x80FF80,4,50);
+            //scene.add(light3);
+
+            //LIGHT IN A SINGLE DIRECTION 
+            var directionalLight = new THREE.DirectionalLight(0xFFFFFF,1);
+            directionalLight.position.set(0,1,0);
+            scene.add(directionalLight);
+
+            //CONE STYLE SPOTLIGHT (X,Y,Z)
+            var spotLight = new THREE.SpotLight(0xFF0000,3);
+            spotLight.position.set(0,30,0);
+            scene.add(spotLight);
+
+            //GAME LOGIC
+            var update = function()
+            {
+                //cube.rotation.x += 0.09;
+                //cube.rotation.y +=0.09;
+                var time = Date.now() * 0.0005;
+                //MOVES POINT LIGHTS AROUND WORLD USING MATH
+                light1.position.x = Math.sin(time * 0.7)*30;
+                light1.position.y = Math.cos(time * 0.5)*40;
+                light1.position.z = Math.cos(time * 0.3)*30;
+
+                light2.position.x = Math.cos(time * 0.3)*30;
+                light2.position.y = Math.sin(time * 0.5)*40;
+                light2.position.z = Math.sin(time * 0.7)*30;
+
+                light3.position.x = Math.sin(time * 0.7)*30;
+                light3.position.y = Math.cos(time * 0.3)*40;
+                light3.position.z = Math.sin(time * 0.5)*30;
+            };
+            //DRAW SCENE
+
+            var render = function (){
+                //window.requestAnimationFrame(render);
+
+                cube.position.set(0,0.5,0);
+                
+                renderer.render(scene,camera);
+
+            };
+            render();
+
+            requestAnimationFrame(render);
+            
+            //RUN GAME LOOP (UPDATE, RENDER, REPEAT)
+            var GameLoop = function()
+            {
+                requestAnimationFrame(GameLoop);
+
+                update();
+                render();
+            };
+
+            GameLoop();
+        </script>
+
+
+
+    </body>
+</html>
